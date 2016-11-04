@@ -2,13 +2,15 @@
 *  ProtoBuff Grammar to JSMF Metamodel
 * 
 *   @licence MIT
-*    @Author Jean-Sébastien Sottet
+*   @Author Jean-Sébastien Sottet
+*/
+/*
+*  TODO : look at the message declared after the reference
 */
 
 {
     var opt = options;
     var MMProto = new opt.Model('Protobuf');
-    //console.log(opt);
     function jsmfType(typeProto) {
         var result = undefined;
         switch(typeProto) {
@@ -67,19 +69,23 @@ Package = 'package' ws pname:Identifier ws ';' ws
 
 
 Message = 'message' ws id:String ws '{' ws
-         attTable:Content* '}' ws
+         attTable:Content*  '}' ws
 {
     var result = opt.Class.newInstance(id)
     
     //if attTable was not an Enum nor a Class
-    if(attTable.feature===true) {
-        for(let i = 0; i < attTable.length; i++) {
-            var att = attTable[i]
+    for(let j =0; j < attTable.length;j++) {
+        
+        if(attTable[j].feature===true) {
+            
+          // console.log(attTable[j].feature, jsmfType(attTable[j].type));
+            var att = attTable[j]
             var refType = jsmfType(att.type);
-
-            if(refType.attrType){
+            //WARNING if refType === undefined => case of not previously matched reference messages or not declared primitive type
+            if(refType!=undefined && refType.attrType){
                 result.addAttribute(att.name,refType.type,att.opt)
-            } else { //else it is a reference 
+            } 
+             if(refType!=undefined && !refType.attrType){ //else it is a reference 
                 var card = -1;
                 if(refType.opt) {card =1} else {card=-1} //use ternary operator instead
                 result.addReference(att.name,refType.type,card);
@@ -90,7 +96,7 @@ Message = 'message' ws id:String ws '{' ws
     return MMProto;
 }
 
-Content = Optional / Repeated / Message / Enum
+Content = Message / Enum / Optional / Repeated 
 
 Optional = 'optional' ws type:Identifier ws name:String ws '=' ws code:Identifier ws ';' ws
 {

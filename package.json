@@ -17,6 +17,7 @@
   "license": "MIT",
   "dependencies": {
     "jsmf": "^0.10.0",
-    "pegjs": "^0.10.0"
+    "pegjs": "^0.10.0",
+    "protobufjs": "^5.0.1"
   }
 }

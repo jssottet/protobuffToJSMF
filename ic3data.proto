@@ -61,6 +61,14 @@ message Application {
     optional string permission = 4;
     optional uint32 missing = 5;
 
+
+    message Instruction {
+      optional string statement = 1;
+      optional string class_name = 2;
+      optional string method = 3;
+      optional uint32 id = 4;
+    }
+
     message Extra {
       optional string extra = 1;
       optional Instruction instruction = 2;
@@ -80,12 +88,6 @@ message Application {
 
     repeated IntentFilter intent_filters = 12;
 
-    message Instruction {
-      optional string statement = 1;
-      optional string class_name = 2;
-      optional string method = 3;
-      optional uint32 id = 4;
-    }
 
     message ExitPoint {
       optional Instruction instruction = 1;
