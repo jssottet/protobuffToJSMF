@@ -77,7 +77,6 @@ function buildModel(MMtype,MElem,sourceObj) {
             buildModel(currentType.__name,cModelElement,curr)
       })
     });
-    //console.log(MElem.components[1].name)
 }
 
 //Util function to make First letter uppercaseonly 

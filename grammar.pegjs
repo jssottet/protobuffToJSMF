@@ -83,11 +83,11 @@ Message = 'message' ws id:String ws '{' ws
             var refType = jsmfType(att.type);
             //WARNING if refType === undefined => case of not previously matched reference messages or not declared primitive type
             if(refType!=undefined && refType.attrType){
-                result.addAttribute(att.name,refType.type,att.opt)
+                result.addAttribute(att.name,refType.type,att.mand)
             } 
              if(refType!=undefined && !refType.attrType){ //else it is a reference 
                 var card = -1;
-                if(refType.opt) {card =1} else {card=-1} //use ternary operator instead
+                if(att.mand) {card =-1} else {card=1} //use ternary operator instead
                 result.addReference(att.name,refType.type,card);
             }
         }
@@ -100,13 +100,13 @@ Content = Message / Enum / Optional / Repeated
 
 Optional = 'optional' ws type:Identifier ws name:String ws '=' ws code:Identifier ws ';' ws
 {
-    const op = {feature:true,type:type,name:name,code:code,opt:true};
+    const op = {feature:true,type:type,name:name,code:code,mand:false};
     return op;
 }
             
 Repeated = 'repeated' ws type:Identifier ws name:String ws '=' ws code:Identifier ws ';' ws
 {
-    const rep = {feature:true,type:type,name:name,code:code,opt:false};
+    const rep = {feature:true,type:type,name:name,code:code,mand:true};
     return rep;
 }
 
