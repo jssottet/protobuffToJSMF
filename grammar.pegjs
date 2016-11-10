@@ -31,7 +31,7 @@
                     result= {attrType: true, type:Boolean};
                 break;
             case('int64'):
-                    result= {attrType: true, type:Number};
+                    result= {attrType: true, type:Number}; //
                 break;
             default:
                     result = undefined;    
@@ -76,7 +76,7 @@ Message = 'message' ws id:String ws '{' ws
 {
     var result = opt.Class.newInstance(id)
     
-    //if attTable was not an Enum nor a Class
+    //if attTable was not an Enum nor a Message( a.k.a. Class) (i.e., it matched Optional or Repeated rule)
     for(let j =0; j < attTable.length;j++) {
         
         if(attTable[j]!==undefined && attTable[j].feature===true) {
@@ -85,9 +85,8 @@ Message = 'message' ws id:String ws '{' ws
             var att = attTable[j]
             var refType = jsmfType(att.type);
             //WARNING if refType === undefined => case of not previously matched reference messages or not declared primitive type
-            if(refType!=undefined && refType.attrType){
-                
-               // att.mand? refType.type=Array : refType.type;
+            if(refType!=undefined && refType.attrType){    
+                att.mand? refType.type=Array : refType.type;
                 result.addAttribute(att.name,refType.type,att.mand)
             } 
              if(refType!=undefined && !refType.attrType){ //else it is a reference 

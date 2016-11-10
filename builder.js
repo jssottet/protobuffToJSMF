@@ -18,17 +18,36 @@ var mymsg = message.decode(buffer);
 
 var MApp = new Model('App')
 
-var application = getMMClass(MMProto,'Application').newInstance({name:mymsg.name, version:mymsg.version});
+var MMApplication = getMMClass(MMProto,'Application')
+var application = MMApplication.newInstance({name:mymsg.name,version:mymsg.version});
+
+console.log(mymsg.analysis_start);
+
+//set model to Flexible to address the Long object case (unknown type in M2).
+// => that works with JSMF
+MMApplication.setFlexible(true);
 MApp.add(application);
+
+//Popuplate the attributes
+setAttributeFromM2('Application',application,mymsg);
 
 //give a starting point for the function buildModel
 buildModel('Application',application,mymsg);
 
-//display all component of the first application (- there is a priori only one app per file -)
+//display all intents attributes pertaining of the first component of the application of the first application (- there is a priori only one app per file -)
+_.map(MApp.modellingElements.Application[0].components[0].exit_points, x => {
+           (x.intents!=undefined && console.log(x.intents[0].attributes[0].value))
+    }
+);
 
-_.map(MApp.modellingElements.Application[0].components[0].exit_points, x => console.log(x.instruction[0].statement));
 
+console.log(MApp.modellingElements.Application[0].used_permissions, MApp.modellingElements.Application[0].analysis_start)
 
+/**
+* @param MMType {String} identifier/name of the metamodel element
+* @param MElem {JSMF Instance} a modelling element to be populated
+* @param sourceObj {Object} a javascript raw/original object provided by the parsed source/tool
+*/
 function setAttributeFromM2 (MMtype, MElem, sourceObj) {
     var compo = getMMClass(MMProto,MMtype);
  
@@ -38,9 +57,9 @@ function setAttributeFromM2 (MMtype, MElem, sourceObj) {
           
             if(currentElem!== null){   
                 if(currentElem!==undefined && (currentElem.length==undefined || currentElem.length>0)) {
-                    if(_.isArray(currentElem)) { 
-                       // MElem[y]=sourceObj[y]//console.log("Warning multi-valued attribute not supported yet => ignored",currentElem)
-                         //if(MMtype=="Component") {console.log(y,sourceObj[y])}
+                    if(_.isArray(currentElem)) { //it is a multivalued attribute
+                          MElem[y]=sourceObj[y]//console.log("Warning multi-valued attribute not supported yet => ignored",currentElem)
+                         // console.log(y)
                     } else {
                       //  if(MMtype=="Component") {console.log(y,sourceObj[y])}
                         MElem[y]=sourceObj[y]
@@ -50,6 +69,11 @@ function setAttributeFromM2 (MMtype, MElem, sourceObj) {
         });   
 }
 
+/**
+* @param MMtype {String} identifier/name of the metamodel element
+* @param
+* @param
+*/
 //Warning should avoid cyclic relations
 function buildModel(MMtype,MElem,sourceObj) {
     var compo = getMMClass(MMProto,MMtype);
