@@ -1,16 +1,20 @@
 /*
-*  ProtoBuff Grammar to JSMF Metamodel
+*  Google ProtoBuff Grammar to JSMF Metamodel
 * 
 *   @licence MIT
 *   @Author Jean-Sébastien Sottet
 */
 /*
-*  TODO : look at the message declared after the reference
+* Todo : Scope of the definition of elements
+* Todo : it is currently dependend on the order of the declared element in the proto file...should be order dependent 
+* (i.e., reference creation)
 */
 
 {
     var opt = options;
     var MMProto = new opt.Model('Protobuf');
+    
+    //make the correspondance between goggle type and JSMF types
     function jsmfType(typeProto) {
         var result = undefined;
         switch(typeProto) {
@@ -32,8 +36,7 @@
             default:
                     result = undefined;    
         }
-        if(result==undefined) {
-            
+        if(result==undefined) {         
         //Warning : Look at the name in the MM proto not on the scope of definition inside the protobuf file...
            for(let i = 0; i<MMProto.modellingElements.Enum.length;i++) {
                 if(MMProto.modellingElements.Enum[i].__name==typeProto) {
@@ -76,24 +79,27 @@ Message = 'message' ws id:String ws '{' ws
     //if attTable was not an Enum nor a Class
     for(let j =0; j < attTable.length;j++) {
         
-        if(attTable[j].feature===true) {
+        if(attTable[j]!==undefined && attTable[j].feature===true) {
             
           // console.log(attTable[j].feature, jsmfType(attTable[j].type));
             var att = attTable[j]
             var refType = jsmfType(att.type);
             //WARNING if refType === undefined => case of not previously matched reference messages or not declared primitive type
             if(refType!=undefined && refType.attrType){
+                
+               // att.mand? refType.type=Array : refType.type;
                 result.addAttribute(att.name,refType.type,att.mand)
             } 
              if(refType!=undefined && !refType.attrType){ //else it is a reference 
+                // console.log(id, attTable[j].name);
                 var card = -1;
-                if(att.mand) {card =-1} else {card=1} //use ternary operator instead
+                att.mand? card =-1 : card=1; 
                 result.addReference(att.name,refType.type,card);
             }
         }
     }
     MMProto.add(result);
-    return MMProto;
+    //return MMProto;
 }
 
 Content = Message / Enum / Optional / Repeated 
@@ -114,7 +120,7 @@ Enum = 'enum' ws id:Identifier ws '{' ws lit:Litteral* ws '}' ws
 {
    var e = new opt.Enum(id,lit);
    MMProto.add(e);
-   return MMProto;
+   //return MMProto;
 }
 
 

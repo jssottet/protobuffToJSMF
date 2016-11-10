@@ -5,7 +5,6 @@ const ProtoBuf = require("protobufjs"),
     JSMFProtoBuf = require('./jsmfBuilder.js'),
     MMProto = JSMFProtoBuf.metamodel,
     _ = require('lodash');
-  //  util = require("util");
     
 
 var builder = ProtoBuf.loadProtoFile(("./ic3data.proto"));
@@ -25,36 +24,25 @@ MApp.add(application);
 //give a starting point for the function buildModel
 buildModel('Application',application,mymsg);
 
-//mymsg.components = source.relationName
-/*
-_.forEach(mymsg.components, x => {
-                //Component = __name of targetted class
-                var component = getMMClass(MMProto,'Component').newInstance()
-                setAttributeFromM2('Component',component,x)
-                application.addComponents(component)
-                MApp.add(component);
-              }
-         );
-*/
-
 //display all component of the first application (- there is a priori only one app per file -)
-console.log(MApp.modellingElements.Application[0].components[0].name);
 
-//MMProto.getClass('Application')
+_.map(MApp.modellingElements.Application[0].components[0].exit_points, x => console.log(x.instruction[0].statement));
+
 
 function setAttributeFromM2 (MMtype, MElem, sourceObj) {
     var compo = getMMClass(MMProto,MMtype);
-   // var newE = getMMClass(MMProto,'Component').newInstance();
+ 
     _.forEach(compo.attributes, (x,y) => 
         {
-            var currentElem = sourceObj[y];
+            var currentElem = sourceObj==null ? null: sourceObj[y];
+          
             if(currentElem!== null){   
-                console.log(currentElem);
                 if(currentElem!==undefined && (currentElem.length==undefined || currentElem.length>0)) {
-                    //console.log(_.isArray(currentElem))
                     if(_.isArray(currentElem)) { 
-                        console.log("Warning multi-valued attribute not supported yet => ignored")
+                       // MElem[y]=sourceObj[y]//console.log("Warning multi-valued attribute not supported yet => ignored",currentElem)
+                         //if(MMtype=="Component") {console.log(y,sourceObj[y])}
                     } else {
+                      //  if(MMtype=="Component") {console.log(y,sourceObj[y])}
                         MElem[y]=sourceObj[y]
                     }
                 }
@@ -65,17 +53,22 @@ function setAttributeFromM2 (MMtype, MElem, sourceObj) {
 //Warning should avoid cyclic relations
 function buildModel(MMtype,MElem,sourceObj) {
     var compo = getMMClass(MMProto,MMtype);
+    
       _.forEach(compo.references, (x,refName) => {
-          var currentType= x.type
-        _.forEach(sourceObj[refName], curr => {
-            var cModelElement = x.type.newInstance()
-            setAttributeFromM2(currentType.__name,cModelElement,curr)
+            var currentType= x.type
+            //set the current relation Name (to be invoked after the creation of element).
             var stringAddRel = 'add'+toTitleCase(refName)
-            MElem[stringAddRel](cModelElement); 
-            //console.log(currentType.__name);
-            //recCall
-            buildModel(currentType.__name,cModelElement,curr)
-      })
+          
+            var targetObj = sourceObj[refName];
+            if(!_.isArray(targetObj)) { targetObj=[targetObj] }
+                _.forEach(targetObj, curr => {
+ //                 if(currentType.__name=="Instruction"){console.log('t',sourceObj[refName],curr)}; 
+                    var cModelElement = currentType.newInstance();
+                    MElem[stringAddRel](cModelElement); 
+                    setAttributeFromM2(currentType.__name,cModelElement,curr)
+                    //recCall
+                    buildModel(currentType.__name,cModelElement,curr)
+              })
     });
 }
 
