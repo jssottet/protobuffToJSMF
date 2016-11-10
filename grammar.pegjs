@@ -11,7 +11,7 @@
 */
 
 {
-    var opt = options;
+    var opt = options.jsmf;
     var MMProto = new opt.Model('Protobuf');
     
     //make the correspondance between goggle type and JSMF types
@@ -31,7 +31,7 @@
                     result= {attrType: true, type:Boolean};
                 break;
             case('int64'):
-                    result= {attrType: true, type:Number}; //
+                    result= {attrType: true, type:Number}; //originally a long type used by protobuf.js => long.js
                 break;
             default:
                     result = undefined;    

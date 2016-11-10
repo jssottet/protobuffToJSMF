@@ -1,3 +1,9 @@
+/**
+*   Example app that build a JSMF model from a protobuf message (using protobufjs)
+*   @licence MIT
+*   @Author Jean-Sébastien Sottet
+*/
+
 const ProtoBuf = require("protobufjs"),
     fs = require("fs"),
     JSMF = require('jsmf-core'),
@@ -6,7 +12,6 @@ const ProtoBuf = require("protobufjs"),
     MMProto = JSMFProtoBuf.metamodel,
     _ = require('lodash');
     
-
 var builder = ProtoBuf.loadProtoFile(("./ic3data.proto"));
 var message = builder.build("edu.psu.cse.siis.ic3.Application"); //"edu.psu.cse.siis.ic3"
 
@@ -14,17 +19,13 @@ var buffer = fs.readFileSync('./app_examples/a2dp.Vol_107.dat');
 
 var mymsg = message.decode(buffer);
 
-//const application = MMProto.classes.Application[0].newInstance(mymsg.name);
-
+//Create a new model "Mapp" and entry point JSMF instance "application"
 var MApp = new Model('App')
-
 var MMApplication = getMMClass(MMProto,'Application')
-var application = MMApplication.newInstance({name:mymsg.name,version:mymsg.version});
+var application = MMApplication.newInstance();
 
-console.log(mymsg.analysis_start);
-
-//set model to Flexible to address the Long object case (unknown type in M2).
-// => that works with JSMF
+//set model to Flexible to address the Long object case (type defined in external library Long.js).
+// => that works with JSMF using a dynamic typing : setFlexible = true.
 MMApplication.setFlexible(true);
 MApp.add(application);
 
@@ -40,7 +41,7 @@ _.map(MApp.modellingElements.Application[0].components[0].exit_points, x => {
     }
 );
 
-
+//Display the multivalued attribte of application and Long (object) for analysis_start
 console.log(MApp.modellingElements.Application[0].used_permissions, MApp.modellingElements.Application[0].analysis_start)
 
 /**
@@ -58,10 +59,8 @@ function setAttributeFromM2 (MMtype, MElem, sourceObj) {
             if(currentElem!== null){   
                 if(currentElem!==undefined && (currentElem.length==undefined || currentElem.length>0)) {
                     if(_.isArray(currentElem)) { //it is a multivalued attribute
-                          MElem[y]=sourceObj[y]//console.log("Warning multi-valued attribute not supported yet => ignored",currentElem)
-                         // console.log(y)
+                          MElem[y]=sourceObj[y]
                     } else {
-                      //  if(MMtype=="Component") {console.log(y,sourceObj[y])}
                         MElem[y]=sourceObj[y]
                     }
                 }
@@ -71,13 +70,14 @@ function setAttributeFromM2 (MMtype, MElem, sourceObj) {
 
 /**
 * @param MMtype {String} identifier/name of the metamodel element
-* @param
-* @param
+* @param MElem {JSMF Instance} a modelling element to be populated
+* @param sourceObj {Object} a javascript raw/original object provided by the parsed source/tool
 */
 //Warning should avoid cyclic relations
 function buildModel(MMtype,MElem,sourceObj) {
     var compo = getMMClass(MMProto,MMtype);
     
+     // Getting through the metamodel all the references
       _.forEach(compo.references, (x,refName) => {
             var currentType= x.type
             //set the current relation Name (to be invoked after the creation of element).
@@ -85,14 +85,15 @@ function buildModel(MMtype,MElem,sourceObj) {
           
             var targetObj = sourceObj[refName];
             if(!_.isArray(targetObj)) { targetObj=[targetObj] }
-                _.forEach(targetObj, curr => {
- //                 if(currentType.__name=="Instruction"){console.log('t',sourceObj[refName],curr)}; 
-                    var cModelElement = currentType.newInstance();
-                    MElem[stringAddRel](cModelElement); 
-                    setAttributeFromM2(currentType.__name,cModelElement,curr)
-                    //recCall
-                    buildModel(currentType.__name,cModelElement,curr)
-              })
+          
+            _.forEach(targetObj, curr => {
+//                 if(currentType.__name=="Instruction"){console.log('t',sourceObj[refName],curr)}; 
+                var cModelElement = currentType.newInstance();
+                MElem[stringAddRel](cModelElement); 
+                setAttributeFromM2(currentType.__name,cModelElement,curr)
+                //recCall
+                buildModel(currentType.__name,cModelElement,curr)
+          })
     });
 }
 
