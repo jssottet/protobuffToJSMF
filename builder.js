@@ -59,7 +59,7 @@ function setAttributeFromM2 (MMtype, MElem, sourceObj) {
             if(currentElem!== null){   
                 if(currentElem!==undefined && (currentElem.length==undefined || currentElem.length>0)) {
                     if(_.isArray(currentElem)) { //it is a multivalued attribute
-                          MElem[y]=sourceObj[y]
+                        MElem[y].push(sourceObj[y])
                     } else {
                         MElem[y]=sourceObj[y]
                     }
@@ -105,5 +105,5 @@ function toTitleCase(str)
 
 //Util function that will be part of JSMF assuming there is only one Class of that name 
 function getMMClass(metamodel, name) {    
-   return _.filter(metamodel.modellingElements.Class, function(x) {return x.__name == name})[0]  
+   return  metamodel.classes[name][0];//_.filter(metamodel.modellingElements.Class, function(x) {return x.__name == name})[0]  
 }
