@@ -11,6 +11,7 @@ Thanks to npm: `npm install`
 
 ## Usage
 `node jsmfBuilder.js` to build a JSMF metamodel from ic3data.proto (kind of schema) file using PEGJS grammar.
+
 `node builder.js` build a JSMF model from an ic3 example file (also build the metamodel from the ic3data.proto schema)
 
 ## Rational
