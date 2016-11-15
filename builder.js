@@ -44,6 +44,7 @@ _.map(MApp.modellingElements.Application[0].components[0].exit_points, x => {
 //Display the multivalued attribte of application and Long (object) for analysis_start
 console.log(MApp.modellingElements.Application[0].used_permissions, MApp.modellingElements.Application[0].analysis_start)
 
+
 /**
 * @param MMType {String} identifier/name of the metamodel element
 * @param MElem {JSMF Instance} a modelling element to be populated
@@ -59,7 +60,7 @@ function setAttributeFromM2 (MMtype, MElem, sourceObj) {
             if(currentElem!== null){   
                 if(currentElem!==undefined && (currentElem.length==undefined || currentElem.length>0)) {
                     if(_.isArray(currentElem)) { //it is a multivalued attribute
-                        MElem[y].push(sourceObj[y])
+                        MElem[y]==undefined ? MElem[y]=sourceObj[y] : MElem[y].push(sourceObj[y])
                     } else {
                         MElem[y]=sourceObj[y]
                     }
@@ -89,6 +90,7 @@ function buildModel(MMtype,MElem,sourceObj) {
             _.forEach(targetObj, curr => {
 //                 if(currentType.__name=="Instruction"){console.log('t',sourceObj[refName],curr)}; 
                 var cModelElement = currentType.newInstance();
+               // MApp.add(cModelElement);
                 MElem[stringAddRel](cModelElement); 
                 setAttributeFromM2(currentType.__name,cModelElement,curr)
                 //recCall
@@ -107,3 +109,4 @@ function toTitleCase(str)
 function getMMClass(metamodel, name) {    
    return  metamodel.classes[name][0];//_.filter(metamodel.modellingElements.Class, function(x) {return x.__name == name})[0]  
 }
+
