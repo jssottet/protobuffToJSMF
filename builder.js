@@ -25,6 +25,8 @@ var mymsg = message.decode(buffer);
 var MApp=populateModel('Application',new Model('App'),mymsg);
 
 /*
+console.log(MApp.modellingElements.Application[0].components[0].exit_points[0].instruction[0].statement);
+
 _.map(MApp.modellingElements.Application[0].components[0].exit_points, x => {
            (x.intents!=undefined && console.log(x.intents[0].attributes[0].value))
     }

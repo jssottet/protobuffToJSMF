@@ -1,8 +1,8 @@
 {
-  "name": "jsmf-parser",
+  "name": "builder",
   "version": "0.1.0",
   "description": "A Parser Generator targetting/based on JSMF Metamodel description",
-  "main": "index.js",
+  "main": "builder.js",
   "scripts": {
     "test": "mocha"
   },

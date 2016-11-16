@@ -19,7 +19,7 @@
         var result = undefined;
         switch(typeProto) {
             case('string'):
-                    result = {attrType: true, type:String};
+                    result = {attrType: true, type:opt.String};
                 break;
             case('int32'):
                     result= {attrType: true, type:Number};
