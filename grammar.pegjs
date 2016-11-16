@@ -31,7 +31,7 @@
                     result= {attrType: true, type:Boolean};
                 break;
             case('int64'):
-                    result= {attrType: true, type:Number}; //originally a long type used by protobuf.js => long.js
+                    result= {attrType: true, type:Object}; //originally a long type used by protobuf.js => long.js
                 break;
             default:
                     result = undefined;    
