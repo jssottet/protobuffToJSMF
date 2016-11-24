@@ -9,20 +9,32 @@ const ProtoBuf = require("protobufjs"),
     JSMF = require('jsmf-core'),
     Model = JSMF.Model,
     JSMFProtoBuf = require('./jsmfBuilder.js'),
-    MMProto = JSMFProtoBuf.metamodel,
     _ = require('lodash');
-    
-var builder = ProtoBuf.loadProtoFile(("./ic3data.proto"));
-var message = builder.build("edu.psu.cse.siis.ic3.Application"); //"edu.psu.cse.siis.ic3"
 
-//Select file
-var buffer = fs.readFileSync('./app_examples/a2dp.Vol_107.dat');
+function build(IC3Proto, IC3ProtoGrammar, IC3EntryPoint, BinaryAppProtoBuf) {
+  JSMFProtoBuf.parse(IC3ProtoGrammar, IC3Proto)
+  MMProto = JSMFProtoBuf.metamodel
 
-var mymsg = message.decode(buffer);
+  var builder = ProtoBuf.loadProtoFile(IC3Proto);
+  var message = builder.build(IC3EntryPoint); //"edu.psu.cse.siis.ic3"
+
+  //Select file
+  var buffer = fs.readFileSync(BinaryAppProtoBuf);
+
+  var mymsg = message.decode(buffer);
 
 
-//Create a new model "Mapp" and entry point JSMF instance "application"
-var MApp=populateModel('Application',new Model('App'),mymsg);
+  //Create a new model "Mapp" and entry point JSMF instance "application"
+  var MApp=populateModel('Application',new Model('App'),mymsg);
+
+
+  exports.metamodel = MMProto;
+  exports.model = MApp;
+
+  //console.log(MApp);
+}
+
+
 
 /*
 console.log(MApp.modellingElements.Application[0].components[0].exit_points[0].instruction[0].statement);
@@ -43,20 +55,20 @@ _.map(MApp.modellingElements.Application[0].components[0].exit_points, x => {
 *   @param sourceObj {Object} the object obtained by message parsing
 */
 function populateModel(EPClassName, Model, sourceObj) {
-    
+
     var result = Model==undefined ? new Model('App') : Model
-    
+
     //init a class
     var MMApplication = getMMClass(MMProto,EPClassName)
-    
+
     //set model to Flexible to address the Long object case (type defined in external library Long.js).
     // => that works with JSMF using a dynamic typing : setFlexible = true.
-    //MMApplication.setFlexible(true); 
+    //MMApplication.setFlexible(true);
     var application = MMApplication.newInstance();
     result.add(application);
-    
+
     setAttributeFromM2(EPClassName,application,sourceObj);
-    
+
     buildModel(EPClassName,application,sourceObj,result)
     return result;
 }
@@ -68,12 +80,12 @@ function populateModel(EPClassName, Model, sourceObj) {
 */
 function setAttributeFromM2 (MMtype, MElem, sourceObj) {
     var compo = getMMClass(MMProto,MMtype);
- 
-    _.forEach(compo.attributes, (x,y) => 
+
+    _.forEach(compo.attributes, (x,y) =>
         {
             var currentElem = sourceObj==null ? null: sourceObj[y];
-          
-            if(currentElem!== null){   
+
+            if(currentElem!== null){
                 if(currentElem!==undefined && (currentElem.length==undefined || currentElem.length>0)) {
                     if(_.isArray(currentElem)) { //it is a multivalued attribute
                         MElem[y]=sourceObj[y] //get here thw whole array of attributes
@@ -82,7 +94,7 @@ function setAttributeFromM2 (MMtype, MElem, sourceObj) {
                     }
                 }
             }
-        });   
+        });
 }
 
 /**
@@ -94,21 +106,21 @@ function setAttributeFromM2 (MMtype, MElem, sourceObj) {
 //Warning should avoid cyclic relations
 function buildModel(MMtype,MElem,sourceObj,MApp) {
     var compo = getMMClass(MMProto,MMtype);
-    
+
      // Getting through the metamodel all the references
       _.forEach(compo.references, (x,refName) => {
             var currentType= x.type
             //set the current relation Name (to be invoked after the creation of element).
             var stringAddRel = 'add'+toTitleCase(refName)
-          
+
             var targetObj = sourceObj[refName];
             if(!_.isArray(targetObj)) { targetObj=[targetObj] }
-          
+
             _.forEach(targetObj, curr => {
-//                 if(currentType.__name=="Instruction"){console.log('t',sourceObj[refName],curr)}; 
+//                 if(currentType.__name=="Instruction"){console.log('t',sourceObj[refName],curr)};
                 var cModelElement = currentType.newInstance();
                 MApp.add(cModelElement);
-                MElem[stringAddRel](cModelElement); 
+                MElem[stringAddRel](cModelElement);
                 setAttributeFromM2(currentType.__name,cModelElement,curr)
                 //recCall
                 buildModel(currentType.__name,cModelElement,curr,MApp)
@@ -117,16 +129,15 @@ function buildModel(MMtype,MElem,sourceObj,MApp) {
    return MApp
 }
 
-//Util function to make First letter uppercaseonly 
+//Util function to make First letter uppercaseonly
 function toTitleCase(str)
 {
     return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
 }
 
-//Util function that will be part of JSMF assuming there is only one Class of that name 
-function getMMClass(metamodel, name) {    
-   return  metamodel.classes[name][0];//_.filter(metamodel.modellingElements.Class, function(x) {return x.__name == name})[0]  
+//Util function that will be part of JSMF assuming there is only one Class of that name
+function getMMClass(metamodel, name) {
+   return  metamodel.classes[name][0];//_.filter(metamodel.modellingElements.Class, function(x) {return x.__name == name})[0]
 }
 
-exports.metamodel = MMProto;
-exports.model = MApp;
+exports.build = build;
